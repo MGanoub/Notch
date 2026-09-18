@@ -1,6 +1,6 @@
 @Notch.Api_HostAddress = http://localhost:5105
 
-GET {{Notch.Api_HostAddress}}/weatherforecast/
+GET {{Notch.Api_HostAddress}}/
 Accept: application/json
 
 ###
