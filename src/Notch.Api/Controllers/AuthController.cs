@@ -31,7 +31,30 @@ public class AuthController : ControllerBase
         {
             return BadRequest(result.Errors.Select(e => e.Description));
         }
-        
+
+        return await IssueTokens(user);
+    }
+
+    [HttpPost("login")]
+    public async Task<ActionResult<TokenResponse>> Login(LoginRequest request)
+    {
+        var user = await _userManager.FindByNameAsync(request.Username);
+        if (user is null)
+        {
+            return Unauthorized("Data not found");
+        }
+
+        bool isPasswordMatching = await _userManager.CheckPasswordAsync(user, request.Password);
+        if (!isPasswordMatching)
+        {
+            return Unauthorized("Data not found");
+        }
+
+        return await IssueTokens(user);
+    }
+
+    private async Task<ActionResult<TokenResponse>> IssueTokens(AppUser user)
+    {
         var (accessToken, expiresAt) = _tokenService.CreateAccessToken(user);
         var refreshTokenString = _tokenService.CreateRefreshToken();
         
@@ -41,7 +64,7 @@ public class AuthController : ControllerBase
             ExpiresAtUtc = DateTime.UtcNow.AddDays(30),
         };
         await _db.RefreshTokens.AddAsync(refreshToken);
-         await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync();
         return Ok(new TokenResponse(accessToken, refreshTokenString, expiresAt ));
     }
 }
