@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Notch.Api.Data;
 using Notch.Api.Models;
 using Notch.Api.Services;
@@ -66,5 +67,25 @@ public class AuthController : ControllerBase
         await _db.RefreshTokens.AddAsync(refreshToken);
         await _db.SaveChangesAsync();
         return Ok(new TokenResponse(accessToken, refreshTokenString, expiresAt ));
+    }
+    
+    [HttpPost("refresh")]
+    public async Task<ActionResult<TokenResponse>> Refresh(RefreshRequest refreshRequest)
+    {
+        var refreshTokenString = refreshRequest.RefreshToken;
+        var tokenHashed = TokenService.Hash(refreshTokenString);
+        var token = await _db.RefreshTokens.FirstOrDefaultAsync(t=> t.TokenHash == tokenHashed);
+        if (token is null || token.RevokedAtUtc is not null || token.ExpiresAtUtc < DateTime.UtcNow)
+        {
+            return Unauthorized("token not valid");
+        }
+
+        var user = await _userManager.FindByIdAsync(token.UserId);
+        if (user is null)
+        {
+            return Unauthorized("token not valid");
+        }
+        token.RevokedAtUtc = DateTime.UtcNow;
+        return  await IssueTokens(user);
     }
 }
