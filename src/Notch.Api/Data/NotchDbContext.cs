@@ -14,6 +14,7 @@ public class NotchDbContext : IdentityDbContext<AppUser>
     
     public DbSet<TaskItem> TaskItems { get; set; }
     public DbSet<TimeEntry>  TimeEntries { get; set; }
+    public DbSet<RefreshToken> RefreshTokens { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -34,5 +35,7 @@ public class NotchDbContext : IdentityDbContext<AppUser>
 
         builder.Entity<TimeEntry>()
             .HasIndex(t => new { t.UserId, t.StartedAt });
+        builder.Entity<RefreshToken>()
+            .HasIndex(t => t.TokenHash).IsUnique();
     }
 }

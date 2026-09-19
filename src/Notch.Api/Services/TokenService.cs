@@ -43,7 +43,7 @@ public class TokenService
         return Convert.ToBase64String(randomBytes);
     }
 
-    public string Hash(string value)
+    public static string Hash(string value)
     {
         var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(value));
         return Convert.ToHexString(bytes);

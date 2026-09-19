@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using Notch.Api.Data;
 using Notch.Api.Models;
 using Notch.Api.Services;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,7 +24,9 @@ builder.Services.AddIdentityCore<AppUser>(options =>
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+//builder.Services.AddOpenApi();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 builder.Services.AddAuthentication(options =>
     {
@@ -49,10 +52,15 @@ builder.Services.AddAuthentication();
 
 var app = builder.Build();
 
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    //app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI();
+    app.MapScalarApiReference(options => 
+        { options.OpenApiRoutePattern = "/swagger/v1/swagger.json"; });
 }
 
 app.UseHttpsRedirection();
