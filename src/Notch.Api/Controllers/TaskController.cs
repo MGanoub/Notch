@@ -33,7 +33,7 @@ public class TaskController : ControllerBase
         return Ok(taskList);
     }
 
-    [HttpPost("")]
+    [HttpPost]
     public async Task<ActionResult> CreateTask(CreateTaskRequest request)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -53,9 +53,60 @@ public class TaskController : ControllerBase
             ParentTaskId = request.ParentTaskId,
             UserId = userId!
         };
-        _db.TaskItems.AddAsync(task);
+        await _db.TaskItems.AddAsync(task);
         await _db.SaveChangesAsync();
         var dto = new TaskItemDto(task.Id, task.Title, task.ParentTaskId, task.Status, task.CreatedAt);
         return Created($"api/tasks/{task.Id}", dto);
+    }
+    
+    [HttpPatch ("{id:guid}/status")]
+    public async Task<IActionResult> UpdateTaskStatus(Guid id, UpdateTaskStatusRequest request)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var task = await _db.TaskItems.FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
+        if (task is null)
+        {
+            return NotFound("Task not found");
+        }
+
+        task.Status = request.Status;
+        await _db.SaveChangesAsync();
+        return NoContent();
+    }
+    
+    [HttpGet ("{id:guid}")]
+    public async Task<ActionResult<TaskItemDto>> GetTask(Guid id)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var task = await _db.TaskItems.FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
+        if (task is null)
+        {
+            return NotFound("Task not found");
+        }
+
+        var taskDto = new TaskItemDto
+        (
+            Id : task.Id,
+            Title : task.Title,
+            ParentTaskId : task.ParentTaskId,
+            Status : task.Status,
+            CreatedAtUtc : task.CreatedAt
+        );
+        return Ok(taskDto);
+    }
+    
+    [HttpDelete ("{id:guid}")]
+    public async Task<IActionResult> DeleteTask(Guid id)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var task = await _db.TaskItems.FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
+        if (task is null)
+        {
+            return NotFound("Task not found");
+        }
+        
+        _db.TaskItems.Remove(task);
+        await _db.SaveChangesAsync();
+        return NoContent();
     }
 }
