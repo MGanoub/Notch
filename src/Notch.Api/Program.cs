@@ -72,6 +72,14 @@ builder.Services.AddAuthentication(options =>
     });
 
 builder.Services.AddScoped<TokenService>();
+
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+        policy.WithOrigins(builder.Configuration["Cors:AllowedOrigin"] ?? "http://localhost:5173")
+            .AllowAnyHeader()
+            .AllowAnyMethod());
+});
 builder.Services.AddAuthentication();
 
 var app = builder.Build();
@@ -88,6 +96,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
