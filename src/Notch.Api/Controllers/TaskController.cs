@@ -4,7 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Notch.Api.Data;
 using Notch.Api.Models;
+using Notch.Api.Services;
 using Notch.Shared.Dto;
+using Notch.Shared.Enums;
 
 namespace Notch.Api.Controllers;
 
@@ -14,10 +16,12 @@ namespace Notch.Api.Controllers;
 public class TaskController : ControllerBase
 {
     private readonly NotchDbContext _db;
+    private readonly TimerService _timerService;
     
-    public TaskController(NotchDbContext db)
+    public TaskController(NotchDbContext db, TimerService timerService)
     {
         _db = db;
+        _timerService = timerService;
     }
 
 
@@ -70,6 +74,11 @@ public class TaskController : ControllerBase
         }
 
         task.Status = request.Status;
+        
+        if (request.Status == NotchStatus.Done)
+        {
+            await _timerService.StopIfRunningForTaskAsync(userId!, task.Id);
+        }
         await _db.SaveChangesAsync();
         return NoContent();
     }

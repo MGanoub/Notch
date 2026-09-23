@@ -72,6 +72,7 @@ builder.Services.AddAuthentication(options =>
     });
 
 builder.Services.AddScoped<TokenService>();
+builder.Services.AddScoped<TimerService>();
 
 builder.Services.AddCors(options =>
 {

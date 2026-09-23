@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Notch.Api.Data;
 using Notch.Api.Models;
+using Notch.Api.Services;
 using Notch.Shared.Dto;
 
 namespace Notch.Api.Controllers;
@@ -15,39 +16,24 @@ namespace Notch.Api.Controllers;
 public class TimeEntryController : ControllerBase
 {
     private readonly NotchDbContext _db;
+    private readonly TimerService _timerService;
 
-    public TimeEntryController(NotchDbContext db)
+    public TimeEntryController(NotchDbContext db, TimerService timerService)
     {
         _db = db;
+        _timerService = timerService;
     }
 
     [HttpPost("start")]
     public async Task<ActionResult<TimeEntryDto>> StartTask(StartTimerRequest request)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        var task = await _db.TaskItems
-            .AnyAsync(t => t.Id == request.TaskItemId && t.UserId == userId);
-        if (!task)
+        var entry = await _timerService.StartAsync(userId, request.TaskItemId);
+        if (entry is null)
         {
-            return NotFound("Task not found");
+            return NotFound("Task item not found");
         }
-        
-        // auto-stop whatever's currently running
-        var currentTimeEntry = await _db.TimeEntries
-            .FirstOrDefaultAsync(e => e.EndedAt == null && e.UserId == userId);
-        if (currentTimeEntry is not null)
-        {
-            currentTimeEntry.EndedAt = DateTime.UtcNow;
-            await _db.SaveChangesAsync();
-        }
-        var timeEntry = new TimeEntry
-        {
-            TaskItemId = request.TaskItemId,
-            UserId = userId!,
-        };
-        await _db.TimeEntries.AddAsync(timeEntry);
-        await _db.SaveChangesAsync();
-        var dto = new TimeEntryDto(timeEntry.Id, timeEntry.TaskItemId, timeEntry.StartedAt, timeEntry.EndedAt);
+        var dto = new TimeEntryDto(entry.Id, entry.TaskItemId, entry.StartedAt, entry.EndedAt);
         return Ok(dto);
     }
 
@@ -55,16 +41,12 @@ public class TimeEntryController : ControllerBase
     public async Task<ActionResult<TimeEntryDto>> StopTask()
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        var currentTimeEntry = await _db.TimeEntries
-            .FirstOrDefaultAsync(t => t.EndedAt == null && t.UserId == userId);
-        if (currentTimeEntry is null)
+        var entry = await _timerService.StopAsync(userId);
+        if (entry is null)
         {
             return NoContent();
         }
-
-        currentTimeEntry.EndedAt = DateTime.UtcNow;
-        await _db.SaveChangesAsync();
-        var currentTimeDto = new TimeEntryDto(currentTimeEntry.Id,  currentTimeEntry.TaskItemId,  currentTimeEntry.StartedAt, currentTimeEntry.EndedAt);
+        var currentTimeDto = new TimeEntryDto(entry.Id,  entry.TaskItemId,  entry.StartedAt, entry.EndedAt);
         return Ok(currentTimeDto);
     }
     

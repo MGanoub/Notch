@@ -1,0 +1,62 @@
+﻿.task-list {
+    max-width: 480px;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    font-family: system-ui, sans-serif;
+}
+
+.task-row{
+    display:flex;
+    justify-content: space-between;
+    align-items:center;
+    padding: 8px 0;
+}
+
+.task-title{
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.subtask-list{
+    list-style: none;
+    margin: 0 0 12px 0;
+    padding-left: 12px;
+    border-left: 1px solid #e0e0e0;
+}
+
+.subtask-row {
+    display: flex;
+    justify-content: space-between;
+    align-content: center;
+    padding: 6px 0;
+}
+
+.subtask-title {
+    font-size: 13px;
+}
+
+.subtask-title.done {
+    color: #888;
+    text-decoration: line-through;
+}
+
+.status-badge {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 6px;
+    white-space: nowrap;
+}
+
+.status-badge.todo{
+    color: #888;
+    background: transparent;
+}
+
+.status-badge.in-progress{
+    color: #1a5fb4;
+    background: #e6f1fb;
+}
+.status-badge.done{
+    color: #2e7d32;
+}

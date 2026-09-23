@@ -3,7 +3,7 @@ import type {TaskItem} from "../types.ts";
 
 const API_BASE = "http://localhost:5105";
 
-const HARDCODED_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJiZjAxNGFjYS00ZTJhLTQ3ZmMtOWY4OS05M2FmOTgzNTgxYTYiLCJ1bmlxdWVfbmFtZSI6ImFsaSIsImp0aSI6IjczMjZhY2U1LTk1YzktNGQwMC1iMTVlLWNiMDdhZWMxNDhkMyIsImV4cCI6MTc4OTkxNjM0MiwiaXNzIjoiTm90Y2giLCJhdWQiOiJOb3RjaCJ9.chMdNN3u0SvlFb4ZfPQgruZNPRJ5hZVxqAxQMYwBQd8";
+const HARDCODED_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJiM2E4YTBjZC1lOTBlLTQ5MWItYmJhMS04MmQ3YzYzMDJkMmYiLCJ1bmlxdWVfbmFtZSI6ImFobWVkIiwianRpIjoiYmE2NDIwMzEtMTQwZS00MDRjLWI2MTAtMDY0MmE4YmVjYjE5IiwiZXhwIjoxNzkwMTkwNTA5LCJpc3MiOiJOb3RjaCIsImF1ZCI6Ik5vdGNoIn0.TvkHrrv81XaUB3JgwQdwLTViEtWzloF8gtf3OPff6wc";
 export function useTasks() {
     const [tasks, setTasks] = useState<TaskItem[]>([]);
     const [loading, setLoading] = useState(false);

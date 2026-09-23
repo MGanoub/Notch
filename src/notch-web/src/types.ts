@@ -12,3 +12,9 @@ export enum TaskStatus
     InProgress = 1,
     Done = 2,
 }
+
+export enum TaskStatus {
+    Todo = 0,
+    InProgress = 1,
+    Done = 2,
+}
