@@ -2,6 +2,7 @@
     max-width: 480px;
     margin: 0 10px 0;
     border: 1px solid #e0e0e0;
+    background: white;
     border-radius: 12px;
     padding: 1rem 1.25rem;
     font-family: system-ui, sans-serif;
@@ -51,7 +52,7 @@
 
 .status-badge.todo{
     color: #888;
-    background: transparent;
+    background: var(--color-accent-bg);
 }
 
 .status-badge.in-progress{

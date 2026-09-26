@@ -1,0 +1,7 @@
+﻿.form-title
+{
+    text-align: center;
+    color: var(--color-accent);
+    font-size: 2rem;
+    font-weight: 700;
+}
