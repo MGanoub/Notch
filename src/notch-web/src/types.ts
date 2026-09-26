@@ -18,3 +18,9 @@ export enum TaskStatus {
     InProgress = 1,
     Done = 2,
 }
+
+export interface TokenResponse{
+    accessToken: string;
+    refreshToken: string;
+    accessTokenExpiresAtUtc: string;
+}
