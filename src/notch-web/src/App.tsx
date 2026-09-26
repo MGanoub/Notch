@@ -1,10 +1,15 @@
 import {useEffect} from "react";
 import {TaskList} from "./components/TaskList";
-
-const API_BASE = "http://localhost:5105";
+import {AuthPage} from "./components/AuthPage.tsx";
+import {useAuth} from "./context/AuthContext.tsx";
 
 function App()
 {
+    const {accessToken} = useAuth();
+    if(!accessToken)
+    {
+        return <AuthPage/>;
+    }
   return (
       <div className="App">
         <TaskList />

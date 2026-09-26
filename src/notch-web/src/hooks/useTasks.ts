@@ -1,21 +1,25 @@
 ﻿import {useEffect, useState} from "react";
 import type {TaskItem} from "../types.ts";
+import {API_BASE} from "../config.ts";
+import {useAuth} from "../context/AuthContext.tsx";
 
-const API_BASE = "http://localhost:5105";
-
-const HARDCODED_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJiM2E4YTBjZC1lOTBlLTQ5MWItYmJhMS04MmQ3YzYzMDJkMmYiLCJ1bmlxdWVfbmFtZSI6ImFobWVkIiwianRpIjoiN2YyZWU2ZmMtZmQzMS00NWI1LWFjNzctYmFiYzM3ZTU3OWJiIiwiZXhwIjoxNzkwNDMzNTg0LCJpc3MiOiJOb3RjaCIsImF1ZCI6Ik5vdGNoIn0.2n6Ept4XohR4c3S-2Iag-nIWd_OCwZGkvzHZzoj9ynI";
 export function useTasks() {
+    const {accessToken } = useAuth();
     const [tasks, setTasks] = useState<TaskItem[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string>("");
 
     useEffect(() => {
+        if(!accessToken)
+        {
+            return;
+        }
         setLoading(true);
         fetch(`${API_BASE}/api/tasks`, {
             headers: {
                 "Content-Type": "application/json",
                 "Accept": "application/json",
-                Authorization: `Bearer ${HARDCODED_TOKEN}`
+                Authorization: `Bearer ${accessToken}`
             }
         })
             .then((res) => {
@@ -29,6 +33,6 @@ export function useTasks() {
             })
             .catch((err) => setError(err.message))
             .finally(() => setLoading(false));
-    }, []);
+    }, [accessToken]);
     return {tasks, loading, error};
 }

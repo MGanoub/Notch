@@ -28,7 +28,7 @@ public class TimeEntryController : ControllerBase
     public async Task<ActionResult<TimeEntryDto>> StartTask(StartTimerRequest request)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        var entry = await _timerService.StartAsync(userId, request.TaskItemId);
+        var entry = await _timerService.StartAsync(userId!, request.TaskItemId);
         if (entry is null)
         {
             return NotFound("Task item not found");
@@ -41,7 +41,7 @@ public class TimeEntryController : ControllerBase
     public async Task<ActionResult<TimeEntryDto>> StopTask()
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        var entry = await _timerService.StopAsync(userId);
+        var entry = await _timerService.StopAsync(userId!);
         if (entry is null)
         {
             return NoContent();
