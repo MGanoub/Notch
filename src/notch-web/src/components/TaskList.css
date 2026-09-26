@@ -1,5 +1,6 @@
 ﻿.task-list {
     max-width: 480px;
+    margin: 0 10px 0;
     border: 1px solid #e0e0e0;
     border-radius: 12px;
     padding: 1rem 1.25rem;

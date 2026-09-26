@@ -2,6 +2,8 @@ import {useEffect} from "react";
 import {TaskList} from "./components/TaskList";
 import {AuthPage} from "./components/AuthPage.tsx";
 import {useAuth} from "./context/AuthContext.tsx";
+import {Header} from "./components/Header";
+import "./App.css";
 
 function App()
 {
@@ -11,7 +13,8 @@ function App()
         return <AuthPage/>;
     }
   return (
-      <div className="App">
+      <div className="app-container">
+          <Header />
         <TaskList />
       </div>
   );
