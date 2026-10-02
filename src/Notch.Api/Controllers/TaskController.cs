@@ -31,6 +31,7 @@ public class TaskController : ControllerBase
         var userid = User.FindFirstValue(ClaimTypes.NameIdentifier);
         var taskList = await _db.TaskItems
             .Where(t => t.UserId == userid)
+            .OrderBy(t=> t.CreatedAt)
             .Select(t => new TaskItemDto(t.Id, t.Title, t.ParentTaskId, t.Status, t.CreatedAt))
             .ToListAsync();
 
