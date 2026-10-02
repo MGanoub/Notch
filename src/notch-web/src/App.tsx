@@ -19,6 +19,7 @@ function App()
       <div className="app-container">
           <Header />
           <AddTaskForm tasks={tasks} onChanged={refetch}/>
+          <h2 className="tasks-title">Current Tasks</h2>
         <TaskList tasks={ tasks } loading ={loading} error={error} onChanged={refetch} />
       </div>
   );
