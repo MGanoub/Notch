@@ -47,14 +47,14 @@ export function TaskList( {tasks, loading, error, onChanged} : TaskListProps)
     return (
        <div className="task-list">
            {getTopLevelTasks(tasks).map((task) => (
-               <div key={task.id}>
+               <div key={task.id} className="task-card">
                    <div className="task-row">
                        <span className="task-title">{task.title}</span>
                        <span className={`status-badge ${statusClass(task.status)}`}>
                            {statusLabel(task.status)}
                        </span>
                    </div>
-                   <ul className="subtask-list">
+                   {getSubTasks(tasks, task.id).length > 0 &&<ul className="subtask-list">
                        {getSubTasks(tasks, task.id).map((subtask => (
                            <li key={subtask.id} className="subtask-row">
                                <span className={`subtask-title ${subtask.status === TaskStatus.Done ? "done" : ""}`}>
@@ -67,7 +67,7 @@ export function TaskList( {tasks, loading, error, onChanged} : TaskListProps)
                                )}
                            </li>
                        )))}
-                   </ul>
+                   </ul>}
                </div>
                ))}
        </div>
