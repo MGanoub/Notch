@@ -6,33 +6,27 @@ import {useAuth} from "../context/AuthContext.tsx";
 export function useTasks() {
     const {accessToken } = useAuth();
     const [tasks, setTasks] = useState<TaskItem[]>([]);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string>("");
-
-    useEffect(() => {
-        if(!accessToken)
-        {
-            return;
-        }
+    
+    async function fetchTasks() {
+        if(!accessToken) return;
         setLoading(true);
-        fetch(`${API_BASE}/api/tasks`, {
-            headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json",
-                Authorization: `Bearer ${accessToken}`
-            }
-        })
-            .then((res) => {
-                if (!res.ok) {
-                    throw new Error("Failed to fetch tasks");
-                }
-                return res.json();
-            })
-            .then((data) => {
-                setTasks(data)
-            })
-            .catch((err) => setError(err.message))
-            .finally(() => setLoading(false));
+        try {
+            const res = await fetch(`${API_BASE}/api/tasks`, {
+                headers: { Authorization: `Bearer ${accessToken}` },
+            });
+            if(!res.ok) throw new Error("failed to fetch tasks");
+            setTasks(await res.json());
+        }
+        catch (err){
+            setError( err instanceof Error ? err.message : "something went wrong" );
+        } finally {
+            setLoading(false);
+        }
+    }
+    useEffect(() => {
+        fetchTasks();
     }, [accessToken]);
-    return {tasks, loading, error};
+    return {tasks, loading, error, refetch: fetchTasks};
 }

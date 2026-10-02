@@ -1,8 +1,13 @@
-﻿import {useTasks} from "../hooks/useTasks.ts";
-import type {TaskItem} from "../types.ts";
+﻿import type {TaskItem} from "../types.ts";
 import {TaskStatus} from "../types.ts";
 import "./TaskList.css";
 
+interface TaskListProps {
+    tasks : TaskItem[];
+    loading: boolean;
+    error: string;
+    onChanged: () => void;
+}
 
 function getSubTasks(tasks: TaskItem[], parentId: string) : TaskItem[] {
     return tasks.filter((task) => {return task.parentTaskId === parentId});
@@ -28,9 +33,8 @@ function statusClass(status: TaskStatus): string {
     }
 }
 
-export function TaskList()
+export function TaskList( {tasks, loading, error, onChanged} : TaskListProps)
 {
-    const {tasks, loading, error} = useTasks();
     if(loading)
     {
         return <p>Loading...</p>;

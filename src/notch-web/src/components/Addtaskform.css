@@ -1,0 +1,54 @@
+﻿.add-task-form {
+    max-width: 480px;
+    margin: 0px 10px 1rem 10px;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    font-family: system-ui, sans-serif;
+}
+
+.add-task-form h2 {
+    margin: 0 0 10px 0;
+    font-size: 14px;
+    font-weight: 500;
+    color: #555;
+}
+
+.add-task-form .form-row {
+    display: flex;
+    gap: 8px;
+}
+
+.add-task-form input,
+.add-task-form select {
+    flex: 4;
+    font-size: 13px;
+    padding: 8px 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-sizing: border-box;
+}
+
+
+.add-task-form button {
+    flex: 1;
+    padding: 8px 14px;
+    border: none;
+    border-radius: 6px;
+    background: var(--color-accent, #1a5fb4);
+    color: white;
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.add-task-form button:disabled {
+    background: #aac4e6;
+    cursor: not-allowed;
+}
+
+.add-task-form .error {
+    color: #c62828;
+    font-size: 13px;
+    margin: 8px 0 0 0;
+}
