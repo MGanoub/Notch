@@ -14,7 +14,6 @@ public partial class App : Application
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
-        TokenStorage.Save(new TokenResponse("fake-access", "fake-refresh", DateTime.UtcNow.AddMinutes(15)));
         var loaded = TokenStorage.Load();
         Console.WriteLine(loaded?.AccessToken);
     }
