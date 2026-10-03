@@ -5,12 +5,14 @@ import {useAuth} from "./context/AuthContext.tsx";
 import {Header} from "./components/Header";
 import {useTasks} from "./hooks/useTasks.ts";
 import {AddTaskForm} from "./components/AddTaskForm";
+import {useCurrentTimer} from "./hooks/useCurrentTimer.ts";
 import "./App.css";
 
 function App()
 {
     const {accessToken} = useAuth();
     const {tasks, loading, error, refetch} = useTasks();
+    const {currentEntry, start, stop} = useCurrentTimer();
     if(!accessToken)
     {
         return <AuthPage/>;
@@ -20,7 +22,8 @@ function App()
           <Header />
           <AddTaskForm tasks={tasks} onChanged={refetch}/>
           <h2 className="tasks-title">Current Tasks</h2>
-        <TaskList tasks={ tasks } loading ={loading} error={error} onChanged={refetch} />
+        <TaskList tasks={ tasks } loading ={loading} error={error} onChanged={refetch} 
+                  currentTask={currentEntry} startTask={start} stopTask={stop} />
       </div>
   );
 }

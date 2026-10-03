@@ -6,6 +6,13 @@
     createdAtUtc: string;
 }
 
+export interface TimeEntryDto {
+    id: string;
+    taskItemId: string;
+    startedAtUtc: string;
+    endAtUtc: string;
+}
+
 export enum TaskStatus 
 {
     Todo = 0,

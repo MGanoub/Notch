@@ -1,14 +1,20 @@
 ﻿import type {TaskItem} from "../types.ts";
+import type {TimeEntryDto} from "../types.ts";
 import {TaskStatus} from "../types.ts";
 import "./TaskList.css";
 import { useAuth } from "../context/AuthContext.tsx";
 import { API_BASE } from "../config";
+import {useEffect} from "react";
+
 
 interface TaskListProps {
     tasks : TaskItem[];
     loading: boolean;
     error: string;
     onChanged: () => void;
+    currentTask: TimeEntryDto | null;
+    startTask: (task: TaskItem) => void;
+    stopTask: (task: TaskItem) => void;
 }
 
 function getSubTasks(tasks: TaskItem[], parentId: string) : TaskItem[] {
@@ -35,9 +41,13 @@ function statusClass(status: TaskStatus): string {
     }
 }
 
-export function TaskList( {tasks, loading, error, onChanged} : TaskListProps)
+export function TaskList( {tasks, loading, error, onChanged, currentTask, startTask, stopTask} : TaskListProps)
 {
     const {accessToken } = useAuth();
+
+    useEffect(() => {
+        onChanged();
+    }, []);
 
     async function updateStatus(taskId: string, newStatus:TaskStatus)
     {
@@ -59,6 +69,20 @@ export function TaskList( {tasks, loading, error, onChanged} : TaskListProps)
             console.log(err instanceof Error ? err.message : "something went wrong");
         }
     }
+
+    async function handleOnClicked(task: TaskItem)
+    {
+        const isTaskRunning = (currentTask !== null && task.id === currentTask.taskItemId);
+        if(isTaskRunning)
+        {
+            await stopTask();
+        }
+        else
+        {
+            await startTask(task.id);
+        }
+        onChanged();
+    }
     
     if(loading)
     {
@@ -73,6 +97,7 @@ export function TaskList( {tasks, loading, error, onChanged} : TaskListProps)
        <div className="task-list">
            {getTopLevelTasks(tasks).map((task) => {
                const subtasks = getSubTasks(tasks, task.id);
+               const isCurrentTask = (currentTask !== null && task.id === currentTask.taskItemId);
                return (
                <div key={task.id} className="task-card">
                    <div className="task-row">
@@ -104,6 +129,7 @@ export function TaskList( {tasks, loading, error, onChanged} : TaskListProps)
                            </li>
                        )))}
                    </ul>}
+                   <button className={`task-action-btn ${isCurrentTask ?  "stop" : ""}`} onClick={()=> handleOnClicked(task)}> {isCurrentTask ? "Stop" : "Start"}</button>
                </div>
                )})}
        </div>
