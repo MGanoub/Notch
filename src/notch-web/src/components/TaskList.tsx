@@ -4,7 +4,8 @@ import {TaskStatus} from "../types.ts";
 import "./TaskList.css";
 import { useAuth } from "../context/AuthContext.tsx";
 import { API_BASE } from "../config";
-import {useEffect} from "react";
+import {useEffect, useState} from "react";
+import { IconPencil, IconCheck, IconX } from "@tabler/icons-react";
 
 
 interface TaskListProps {
@@ -44,10 +45,49 @@ function statusClass(status: TaskStatus): string {
 export function TaskList( {tasks, loading, error, onChanged, currentTask, startTask, stopTask} : TaskListProps)
 {
     const {accessToken } = useAuth();
+    const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+    const [editedTitle, setEditedTitle] = useState<string>("");
 
     useEffect(() => {
         onChanged();
     }, []);
+    
+    function startEditing(task : TaskItem) : void {
+        setEditingTaskId(task.id);
+        setEditedTitle(task.title);
+    }
+    
+    function cancelEditing() : void {
+        setEditingTaskId(null);
+        setEditedTitle("");
+    }
+    
+    async function saveEdit(taskId: string) {
+        const trimmed = editedTitle.trim();
+        if(trimmed === "")
+        {
+            return;
+        }
+        try {
+            const res = await fetch(`${API_BASE}/api/tasks/${taskId}/title`, {
+                method: "PATCH",
+                headers: new Headers({
+                    Authorization: `Bearer ${accessToken}`,
+                    "Content-Type": "application/json",
+                }),
+                body: JSON.stringify({title: trimmed}),
+            });
+            if(!res.ok)
+            {
+                throw new Error("failed to update title");
+            }
+            onChanged();
+            setEditingTaskId(null);
+        } catch(err)
+        {
+            console.log(err instanceof Error ? err.message : "Something went wrong");
+        }
+    }
 
     async function updateStatus(taskId: string, newStatus:TaskStatus)
     {
@@ -98,10 +138,30 @@ export function TaskList( {tasks, loading, error, onChanged, currentTask, startT
            {getTopLevelTasks(tasks).map((task) => {
                const subtasks = getSubTasks(tasks, task.id);
                const isCurrentTask = (currentTask !== null && task.id === currentTask.taskItemId);
+               const isEditing = editingTaskId === task.id;
                return (
                <div key={task.id} className="task-card">
                    <div className="task-row">
-                       <span className="task-title">{task.title}</span>
+                       {isEditing ? (
+                           <div className="title-edit">
+                               <input
+                               autoFocus
+                               value={editedTitle}
+                               onChange={(e) => setEditedTitle(e.target.value)}
+                               onKeyDown={(e) => {
+                                   if(e.key === "Enter") saveEdit(task.id);
+                                   if(e.key === "Escape") cancelEditing();
+                               }}
+                               />
+                               <IconCheck size={16} className="icon-btn" onClick={() => saveEdit(task.id)} />
+                               <IconX size={16} className="icon-btn" onClick={cancelEditing} />
+                           </div>
+                       ) : (
+                           <div className="title-display">
+                               <span className="task-title">{task.title}</span>
+                               <IconPencil size={12} className="icon-btn" onClick={() => startEditing(task)} />
+                           </div>
+                       )}
                        <select 
                            className={`status-select ${statusClass(task.status)}`}
                             value={task.status}
@@ -111,27 +171,51 @@ export function TaskList( {tasks, loading, error, onChanged, currentTask, startT
                            <option value={TaskStatus.Done}>{statusLabel(TaskStatus.Done)}</option>
                        </select>
                    </div>
-                   {subtasks.length > 0 && <ul className="subtask-list">
-                       {subtasks.map((subtask => (
-                           <li key={subtask.id} className="subtask-row">
-                               <span className={`subtask-title ${subtask.status === TaskStatus.Done ? "done" : ""}`}>
-                                   {subtask.title}
-                               </span>
-                               <select
-                                   className={`status-select ${statusClass(subtask.status)}`}
-                                   value={subtask.status}
-                                   onChange={(e) => updateStatus(subtask.id, Number(e.target.value) as TaskStatus)}
-                               >
-                                   <option value={TaskStatus.Todo}>{statusLabel(TaskStatus.Todo)}</option>
-                                   <option value={TaskStatus.InProgress}>{statusLabel(TaskStatus.InProgress)}</option>
-                                   <option value={TaskStatus.Done}>{statusLabel(TaskStatus.Done)}</option>
-                               </select>
-                           </li>
-                       )))}
-                   </ul>}
-                   <button className={`task-action-btn ${isCurrentTask ?  "stop" : ""}`} onClick={()=> handleOnClicked(task)}> {isCurrentTask ? "Stop" : "Start"}</button>
+                   {subtasks.length > 0 && (
+                       <ul className="subtask-list">
+                           {subtasks.map((subtask) => {
+                               const isSubtaskEditing = editingTaskId === subtask.id;
+                               return (
+                                   <li key={subtask.id} className="subtask-row">
+                                       {isSubtaskEditing ? (
+                                           <div className="title-edit">
+                                               <input
+                                                   autoFocus
+                                                   value={editedTitle}
+                                                   onChange={(e) => setEditedTitle(e.target.value)}
+                                                   onKeyDown={(e) => {
+                                                       if (e.key === "Enter") saveEdit(subtask.id);
+                                                       if (e.key === "Escape") cancelEditing();
+                                                   }}
+                                               />
+                                               <IconCheck size={16} className="icon-btn" onClick={() => saveEdit(subtask.id)} />
+                                               <IconX size={16} className="icon-btn" onClick={cancelEditing} />
+                                           </div>
+                                       ) : (
+                                           <div className="title-display">
+                                                    <span className={`subtask-title ${subtask.status === TaskStatus.Done ? "done" : ""}`}>
+                                                        {subtask.title}
+                                                    </span>
+                                               <IconPencil size={12} className="icon-btn" onClick={() => startEditing(subtask)} />
+                                           </div>
+                                       )}
+                                       <select
+                                           className={`status-select ${statusClass(subtask.status)}`}
+                                           value={subtask.status}
+                                           onChange={(e) => updateStatus(subtask.id, Number(e.target.value) as TaskStatus)}
+                                       >
+                                           <option value={TaskStatus.Todo}>{statusLabel(TaskStatus.Todo)}</option>
+                                           <option value={TaskStatus.InProgress}>{statusLabel(TaskStatus.InProgress)}</option>
+                                           <option value={TaskStatus.Done}>{statusLabel(TaskStatus.Done)}</option>
+                                       </select>
+                                   </li>
+                               );
+                           })}
+                       </ul>
+                   )}
                </div>
-               )})}
+               );
+           })}
        </div>
     );
 }

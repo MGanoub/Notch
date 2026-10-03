@@ -98,3 +98,14 @@
 .task-action-btn.stop {
     background: var(--color-danger);
 }
+
+.icon-btn {
+    cursor: pointer;
+    opacity: 0.6;
+    color: #555;
+    margin-left: 2px;
+}
+
+.icon-btn:hover {
+    opacity: 1;
+}

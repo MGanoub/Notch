@@ -84,6 +84,21 @@ public class TaskController : ControllerBase
         return NoContent();
     }
     
+    [HttpPatch ("{id:guid}/title")]
+    public async Task<IActionResult> UpdateTaskTitle(Guid id, UpdateTaskTitleRequest request)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var task = await _db.TaskItems.FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
+        if (task is null)
+        {
+            return NotFound("Task not found");
+        }
+
+        task.Title = request.Title;
+        await _db.SaveChangesAsync();
+        return NoContent();
+    }
+    
     [HttpGet ("{id:guid}")]
     public async Task<ActionResult<TaskItemDto>> GetTask(Guid id)
     {

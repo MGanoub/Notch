@@ -7,3 +7,5 @@ public record TaskItemDto ( Guid Id, string Title, Guid? ParentTaskId, NotchStat
 public record CreateTaskRequest(string Title, Guid? ParentTaskId );
 
 public record UpdateTaskStatusRequest(NotchStatus Status );
+
+public record UpdateTaskTitleRequest(string Title);
