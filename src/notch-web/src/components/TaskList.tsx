@@ -213,6 +213,11 @@ export function TaskList( {tasks, loading, error, onChanged, currentTask, startT
                            })}
                        </ul>
                    )}
+                   <button
+                       className={`start-stop-btn ${isCurrentTask ? "running" : ""}`}
+                       onClick={() => handleOnClicked(task)}>
+                       {isCurrentTask ? "Stop" : "Start"}
+                   </button>
                </div>
                );
            })}

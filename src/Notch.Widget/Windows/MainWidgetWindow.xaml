@@ -8,18 +8,25 @@
         Title="Notch" Height="220" Width="260"
         Topmost="True"
         Left="40" Top="40"
-        Loaded="MainWidgetWindow_Loaded">
+        ResizeMode="CanResizeWithGrip"
+        Loaded="MainWidgetWindow_Loaded"
+        Background="{StaticResource SurfaceBrush}">
     <StackPanel Margin="12">
         <TextBlock Text="Task" FontWeight="Bold" Margin="0,0,0,6"/>
         <ComboBox x:Name="TaskComboBox" Margin="0,0,0,10"
                   DisplayMemberPath="Title"
                   SelectionChanged="TaskComboBox_SelectionChanged"></ComboBox>
         <TextBlock x:Name="StatusText" Margin="0,0,0,10"/>
-        <Button x:Name="StartStopButton" Content="Start" Click="StartStopButton_Click"/>
+        <Button x:Name="StartStopButton" Content="Start" Click="StartStopButton_Click" 
+                Style="{StaticResource ActionButton}" 
+                Background="{StaticResource SuccessBrush}"/>
         
         <TextBlock Text="Subtasks" FontWeight="Bold" Margin="0,0,0,6"/>
         <ListBox x:Name="SubtaskListBox"
                  DisplayMemberPath="Title"
                  SelectionChanged="SubtaskListBox_SelectionChanged"/>
+        <TextBlock Margin="0,10,0,0" HorizontalAlignment="Center" Cursor="Hand">
+            <Hyperlink Click="OpenWebApp_Click">Open full app</Hyperlink>
+        </TextBlock>
     </StackPanel>
 </Window>
