@@ -6,7 +6,9 @@ using System.Windows.Controls;
 using Notch.Shared.Dto;
 using Notch.Widget.Services;
 using System.Linq;
+using System.Windows.Input;
 using System.Windows.Media;
+using Notch.Shared.Enums;
 
 namespace Notch.Widget.Windows;
 
@@ -27,7 +29,6 @@ public partial class MainWidgetWindow : Window
         {
             _allTasks = await response.Content.ReadFromJsonAsync<List<TaskItemDto>>() ?? new List<TaskItemDto>();
             TaskComboBox.ItemsSource = _allTasks.Where(t => t.ParentTaskId is null).ToList();
-           
         }
     }
     
@@ -38,9 +39,9 @@ public partial class MainWidgetWindow : Window
         {
             return;
         }
-
         _currenSubTasks = _allTasks.Where(t => t.ParentTaskId == selectedTask.Id).ToList();
         SubtaskListBox.ItemsSource = _currenSubTasks;
+        SubTasksLabel.Visibility = _currenSubTasks.Count > 0 ? Visibility.Visible : Visibility.Hidden;
     }
 
     private void MainWidgetWindow_Loaded(object sender, RoutedEventArgs e)
@@ -48,11 +49,37 @@ public partial class MainWidgetWindow : Window
         LoadTaskList();
         UpdateStartStopButton();
     }
+    
+    private void Header_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        DragMove();
+    }
+
+    private void CloseButton_Click(object sender, RoutedEventArgs e)
+    {
+        Close();
+    }
+    
+    private void UpdateStatusDisplay(TaskItemDto? task)
+    {
+        var (label, fg, bg) = task?.Status switch
+        {
+            NotchStatus.InProgress => ("In progress", "AccentBrush", "AccentBgBrush"),
+            NotchStatus.Done       => ("Done",        "DoneBrush",   "DoneBgBrush"),
+            NotchStatus.Todo       => ("Todo",        "MutedTextBrush", "InsetBrush"),
+            _                      => ("—",           "MutedTextBrush", "InsetBrush"),
+        };
+
+        StatusText.Text = label;
+        StatusText.Foreground = (Brush)FindResource(fg);
+        StatusPill.Background = (Brush)FindResource(bg);
+    }
 
     private void TaskComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         var selectedTask = TaskComboBox.SelectedItem as TaskItemDto;
         UpdateStartStopButton();
+        UpdateStatusDisplay(selectedTask);
         if (selectedTask is null)
         {
             return;

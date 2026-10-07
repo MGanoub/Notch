@@ -8,25 +8,80 @@
         Title="Notch" Height="220" Width="260"
         Topmost="True"
         Left="40" Top="40"
-        ResizeMode="CanResizeWithGrip"
+        ResizeMode="NoResize" 
+        SizeToContent="Height"
+        WindowStyle="None"
         Loaded="MainWidgetWindow_Loaded"
-        Background="{StaticResource SurfaceBrush}">
-    <StackPanel Margin="12">
-        <TextBlock Text="Task" FontWeight="Bold" Margin="0,0,0,6"/>
-        <ComboBox x:Name="TaskComboBox" Margin="0,0,0,10"
-                  DisplayMemberPath="Title"
-                  SelectionChanged="TaskComboBox_SelectionChanged"></ComboBox>
-        <TextBlock x:Name="StatusText" Margin="0,0,0,10"/>
+        AllowsTransparency="True"
+        Background="Transparent">
+    <Border Background="{StaticResource SurfaceBrush}"
+            BorderBrush="{StaticResource LineBrush}"
+            BorderThickness="1"
+            CornerRadius="14"
+            Padding="16">
+        <StackPanel>
+            <Grid x:Name="HeaderGrid" Margin="0,0,0,14"
+                  Background="Transparent" Cursor="SizeAll"
+                  MouseLeftButtonDown="Header_MouseLeftButtonDown">
+
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <UniformGrid Rows="3" Columns="2" Width="8" Height="12"
+                                 Margin="0,0,8,0" VerticalAlignment="Center" Opacity="0.6">
+                        <Ellipse Width="3" Height="3" Fill="{StaticResource MutedTextBrush}"/>
+                        <Ellipse Width="3" Height="3" Fill="{StaticResource MutedTextBrush}"/>
+                        <Ellipse Width="3" Height="3" Fill="{StaticResource MutedTextBrush}"/>
+                        <Ellipse Width="3" Height="3" Fill="{StaticResource MutedTextBrush}"/>
+                        <Ellipse Width="3" Height="3" Fill="{StaticResource MutedTextBrush}"/>
+                        <Ellipse Width="3" Height="3" Fill="{StaticResource MutedTextBrush}"/>
+                    </UniformGrid>
+                    <TextBlock Text="Notch" FontWeight="SemiBold"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Style="{StaticResource IconButton}"
+                            Content="&#xE711;" Click="CloseButton_Click"/>
+                </StackPanel>
+            </Grid>
+           
+        <ComboBox x:Name="TaskComboBox" Margin="0,0,0,6"
+                  SelectionChanged="TaskComboBox_SelectionChanged">
+            <ComboBox.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis"/>
+                </DataTemplate>
+            </ComboBox.ItemTemplate>
+        </ComboBox>
+            <Border Background="{StaticResource InsetBrush}" CornerRadius="8"
+                    Padding="12,10" Margin="0,0,0,12">
+                <Grid>
+                    <TextBlock Text="Status" FontSize="12" VerticalAlignment="Center"
+                               Foreground="{StaticResource MutedTextBrush}"/>
+                    <Border x:Name="StatusPill" CornerRadius="6" Padding="9,3"
+                            HorizontalAlignment="Right"
+                            Background="{StaticResource InsetBrush}">
+                        <TextBlock x:Name="StatusText" Text="—" FontSize="11"/>
+                    </Border>
+                </Grid>
+            </Border>
         <Button x:Name="StartStopButton" Content="Start" Click="StartStopButton_Click" 
                 Style="{StaticResource ActionButton}" 
                 Background="{StaticResource SuccessBrush}"/>
         
-        <TextBlock Text="Subtasks" FontWeight="Bold" Margin="0,0,0,6"/>
+        <TextBlock x:Name="SubTasksLabel" Text="Subtasks" FontWeight="Bold" Margin="0,10,0,6" Foreground="{StaticResource MutedTextBrush}"/>
         <ListBox x:Name="SubtaskListBox"
                  DisplayMemberPath="Title"
                  SelectionChanged="SubtaskListBox_SelectionChanged"/>
-        <TextBlock Margin="0,10,0,0" HorizontalAlignment="Center" Cursor="Hand">
-            <Hyperlink Click="OpenWebApp_Click">Open full app</Hyperlink>
-        </TextBlock>
+        <!-- Footer: divider line + link with icon -->
+        <Border BorderBrush="{StaticResource LineBrush}"
+                BorderThickness="0,1,0,0"
+                Padding="0,10,0,0">
+            <TextBlock HorizontalAlignment="Center" FontSize="11">
+                <Hyperlink Click="OpenWebApp_Click">
+                    <Run FontFamily="Segoe MDL2 Assets" Text="&#xE8A7;"/>
+                    <Run Text=" Open full app"/>
+                </Hyperlink>
+            </TextBlock>
+        </Border>
     </StackPanel>
+    </Border>
 </Window>
