@@ -18,6 +18,9 @@ public partial class MainWidgetWindow : Window
     private List<TaskItemDto> _allTasks = new();
     private List<TaskItemDto> _currenSubTasks = new();
     private TimeEntryDto? _currentEntry = null;
+    public record ParentChoice(Guid? Id, string Title);
+
+    private Guid? _editingTaskId;   // null = adding, a value = renaming that task
     public MainWidgetWindow()
     {
         InitializeComponent();
@@ -101,6 +104,8 @@ public partial class MainWidgetWindow : Window
         StatusText.Text = label;
         StatusText.Foreground = (Brush)FindResource(fg);
         StatusPill.Background = (Brush)FindResource(bg);
+        EditButton.IsEnabled = task is not null;
+        DoneButton.IsEnabled = task is not null;
     }
 
     private void TaskComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -223,5 +228,111 @@ public partial class MainWidgetWindow : Window
         if (TaskComboBox.SelectedItem is not TaskItemDto task) return;
         var target = task.Status == NotchStatus.Done ? NotchStatus.Todo : NotchStatus.Done;
         await SetStatus(task.Id, target);
+    }
+    
+    private void OpenAddPanel()
+    {
+        _editingTaskId = null;
+        EditPanelTitle.Text = "New task";
+        EditTitleBox.Text = "";
+
+        var selected = TaskComboBox.SelectedItem as TaskItemDto;
+        var choices = new List<ParentChoice> { new(null, "No parent (new task)") };
+        choices.AddRange(_allTasks
+            .Where(t => t.ParentTaskId is null)
+            .Select(t => new ParentChoice(t.Id, t.Title)));
+
+        ParentComboBox.ItemsSource = choices;
+        ParentComboBox.SelectedItem = choices.FirstOrDefault(c => c.Id == selected?.Id) ?? choices[0];
+
+        ParentPicker.Visibility = Visibility.Visible;
+        ShowPanel();
+    }
+
+    private void OpenEditPanel(TaskItemDto task)
+    {
+        _editingTaskId = task.Id;
+        EditPanelTitle.Text = "Rename";
+        EditTitleBox.Text = task.Title;
+        ParentPicker.Visibility = Visibility.Collapsed;
+        ShowPanel();
+    }
+
+    private void ShowPanel()
+    {
+        EditError.Text = "";
+        EditPanel.Visibility = Visibility.Visible;
+        EditTitleBox.Focus();
+        EditTitleBox.SelectAll();
+    }
+
+    private void ClosePanel()
+    {
+        EditPanel.Visibility = Visibility.Collapsed;
+        _editingTaskId = null;
+    }
+
+    private async void SavePanel_Click(object sender, RoutedEventArgs e)
+    {
+        var title = EditTitleBox.Text.Trim();
+        if (title.Length == 0)
+        {
+            EditError.Text = "Title can't be empty";
+            return;
+        }
+
+        try
+        {
+            HttpResponseMessage response;
+            if (_editingTaskId is Guid id)
+            {
+                response = await ApiClient.PatchAsJsonAsync(
+                    $"api/tasks/{id}/title", new UpdateTaskTitleRequest(title));
+            }
+            else
+            {
+                var parentId = (ParentComboBox.SelectedItem as ParentChoice)?.Id;
+                response = await ApiClient.PostAsJsonAsync(
+                    "api/tasks", new CreateTaskRequest(title, parentId));
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                EditError.Text = $"Save failed ({(int)response.StatusCode})";
+                return;
+            }
+
+            ClosePanel();
+            await LoadTaskList();
+            var selectedTask = TaskComboBox.SelectedItem as TaskItemDto;
+            if (selectedTask is null)
+            {
+                return;
+            }
+            LoadSubTasksList(selectedTask);
+        }
+        catch (HttpRequestException)
+        {
+            EditError.Text = "Server unreachable";
+        }
+    }
+
+    private void CancelPanel_Click(object sender, RoutedEventArgs e) => ClosePanel();
+
+    private void EditTitleBox_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter) SavePanel_Click(sender, e);
+        else if (e.Key == Key.Escape) ClosePanel();
+    }
+    private void AddButton_Click(object sender, RoutedEventArgs e) => OpenAddPanel();
+
+    private void EditButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (TaskComboBox.SelectedItem is TaskItemDto task) OpenEditPanel(task);
+    }
+
+    private void SubtaskEdit_Click(object sender, RoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.DataContext is TaskItemDto sub) OpenEditPanel(sub);
     }
 }

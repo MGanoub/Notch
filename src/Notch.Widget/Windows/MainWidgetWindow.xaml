@@ -39,11 +39,47 @@
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Style="{StaticResource IconButton}" Content="&#xE710;"
+                            ToolTip="New task" Click="AddButton_Click"/>
                     <Button Style="{StaticResource IconButton}"
                             Content="&#xE711;" Click="CloseButton_Click"/>
                 </StackPanel>
             </Grid>
-           
+            <Border x:Name="EditPanel" Visibility="Collapsed"
+                    Background="{StaticResource InsetBrush}" CornerRadius="8"
+                    Padding="12" Margin="0,0,0,12">
+                <StackPanel>
+                    <TextBlock x:Name="EditPanelTitle" Text="New task"
+                               FontWeight="SemiBold" Margin="0,0,0,8"/>
+
+                    <TextBox x:Name="EditTitleBox" Margin="0,0,0,8"
+                             KeyDown="EditTitleBox_KeyDown"/>
+
+                    <StackPanel x:Name="ParentPicker" Margin="0,0,0,8">
+                        <TextBlock Text="Parent" FontSize="11" Margin="0,0,0,4"
+                                   Foreground="{StaticResource MutedTextBrush}"/>
+                        <ComboBox x:Name="ParentComboBox">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </StackPanel>
+
+                    <TextBlock x:Name="EditError" FontSize="11" Margin="0,0,0,8"
+                               Foreground="{StaticResource DangerBrush}"/>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="Cancel" Style="{StaticResource ActionButton}"
+                                Background="{StaticResource LineBrush}"
+                                Padding="14,6" Margin="0,0,8,0" Click="CancelPanel_Click"/>
+                        <Button Content="Save" Style="{StaticResource ActionButton}"
+                                Background="{StaticResource SuccessBrush}"
+                                Padding="14,6" Click="SavePanel_Click"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
         <ComboBox x:Name="TaskComboBox" Margin="0,0,0,6"
                   SelectionChanged="TaskComboBox_SelectionChanged">
             <ComboBox.ItemTemplate>
@@ -66,11 +102,15 @@
                             <TextBlock x:Name="StatusText" Text="—" FontSize="11"
                                        VerticalAlignment="Center"/>
                         </Border>
+                        
                         <Button x:Name="DoneButton" Margin="6,0,0,0"
                                 Style="{StaticResource IconButton}"
                                 Content="&#xE73E;" ToolTip="Mark done"
                                 IsEnabled="False"
                                 Click="DoneButton_Click"/>
+                        <Button x:Name="EditButton" Margin="6,0,0,0" Style="{StaticResource IconButton}"
+                                Content="&#xE70F;" ToolTip="Rename" IsEnabled="False"
+                                Click="EditButton_Click"/>
                     </StackPanel>
                 </Grid>
             </Border>
@@ -93,6 +133,7 @@
                                     <ColumnDefinition Width="18"/>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
 
                                 <TextBlock x:Name="Marker" Grid.Column="0" Text="○" FontSize="11"
@@ -102,6 +143,8 @@
                                            FontSize="12" VerticalAlignment="Center"
                                            TextTrimming="CharacterEllipsis"/>
                                 <Button Grid.Column="2" Style="{StaticResource IconButton}"
+                                        Content="&#xE70F;" ToolTip="Rename" Click="SubtaskEdit_Click"/>
+                                <Button Grid.Column="3" Style="{StaticResource IconButton}"
                                         Content="&#xE73E;" ToolTip="Mark done"
                                         Click="SubtaskDone_Click"/>
                             </Grid>
