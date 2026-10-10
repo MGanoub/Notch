@@ -35,6 +35,12 @@ public class NotchDbContext : IdentityDbContext<AppUser>
 
         builder.Entity<TimeEntry>()
             .HasIndex(t => new { t.UserId, t.StartedAt });
+
+        builder.Entity<TimeEntry>()
+            .HasIndex(e => e.UserId)
+            .IsUnique()
+            .HasFilter("\"EndedAt\" is NULL");
+        
         builder.Entity<RefreshToken>()
             .HasIndex(t => t.TokenHash).IsUnique();
     }

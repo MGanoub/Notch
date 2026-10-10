@@ -304,6 +304,10 @@ namespace Notch.Api.Migrations
 
                     b.HasIndex("TaskItemId");
 
+                    b.HasIndex("UserId")
+                        .IsUnique()
+                        .HasFilter("\"EndedAt\" is NULL");
+
                     b.HasIndex("UserId", "StartedAt");
 
                     b.ToTable("TimeEntries");
