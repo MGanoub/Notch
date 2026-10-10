@@ -6,6 +6,7 @@ using System.Windows.Controls;
 using Notch.Shared.Dto;
 using Notch.Widget.Services;
 using System.Linq;
+using System.Text.Json;
 using System.Windows.Input;
 using System.Windows.Media;
 using Notch.Shared.Enums;
@@ -22,14 +23,34 @@ public partial class MainWidgetWindow : Window
         InitializeComponent();
     }
     
-    private async void LoadTaskList()
+    private async Task LoadTaskList()
     {
+        var selectedId = (TaskComboBox.SelectedItem as TaskItemDto)?.Id;
         var response = await ApiClient.GetAsync("api/tasks");
+        if (!response.IsSuccessStatusCode) return;
+
+        _allTasks = await response.Content.ReadFromJsonAsync<List<TaskItemDto>>() ?? new List<TaskItemDto>();
+        var topLevel = _allTasks.Where(t => t.ParentTaskId is null).ToList();
+        TaskComboBox.ItemsSource = topLevel;
+        TaskComboBox.SelectedItem = topLevel.FirstOrDefault(t => t.Id == selectedId);
+    }
+
+    private async Task LoadCurrentEntry()
+    {
+        var response = await ApiClient.GetAsync("api/timeentries/current");
         if (response.IsSuccessStatusCode)
         {
-            _allTasks = await response.Content.ReadFromJsonAsync<List<TaskItemDto>>() ?? new List<TaskItemDto>();
-            TaskComboBox.ItemsSource = _allTasks.Where(t => t.ParentTaskId is null).ToList();
+            var body = await response.Content.ReadAsStringAsync();
+            _currentEntry = string.IsNullOrWhiteSpace(body)
+                ? null
+                : JsonSerializer.Deserialize<TimeEntryDto>(body, JsonSerializerOptions.Web);
         }
+        else
+        {
+            Debug.WriteLine($"current failed: {(int)response.StatusCode}");
+        }
+
+        UpdateStartStopButton();
     }
     
     private void LoadSubTasksList(TaskItemDto selectedTask)
@@ -40,14 +61,21 @@ public partial class MainWidgetWindow : Window
             return;
         }
         _currenSubTasks = _allTasks.Where(t => t.ParentTaskId == selectedTask.Id).ToList();
-        SubtaskListBox.ItemsSource = _currenSubTasks;
-        SubTasksLabel.Visibility = _currenSubTasks.Count > 0 ? Visibility.Visible : Visibility.Hidden;
+        SubtaskItems.ItemsSource = _currenSubTasks;
+        SubtasksPanel.Visibility = _currenSubTasks.Count > 0
+            ? Visibility.Visible
+            : Visibility.Collapsed;
     }
 
-    private void MainWidgetWindow_Loaded(object sender, RoutedEventArgs e)
+    private async void MainWidgetWindow_Loaded(object sender, RoutedEventArgs e)
     {
-        LoadTaskList();
-        UpdateStartStopButton();
+        await LoadTaskList();
+        await LoadCurrentEntry();
+        if (_currentEntry is not null)
+        {
+            TaskComboBox.SelectedItem = (TaskComboBox.ItemsSource as IEnumerable<TaskItemDto>)
+                ?.FirstOrDefault(t => t.Id == _currentEntry.TaskItemId);
+        }
     }
     
     private void Header_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -78,8 +106,37 @@ public partial class MainWidgetWindow : Window
     private void TaskComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         var selectedTask = TaskComboBox.SelectedItem as TaskItemDto;
-        UpdateStartStopButton();
         UpdateStatusDisplay(selectedTask);
+        DoneButton.IsEnabled = selectedTask is not null;
+        UpdateStartStopButton();
+        if (selectedTask is null)
+        {
+            return;
+        }
+        LoadSubTasksList(selectedTask);
+    }
+    
+    private async void SubtaskRow_Click(object sender, MouseButtonEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.DataContext is not TaskItemDto sub) return;
+        var target = sub.Status == NotchStatus.InProgress ? NotchStatus.Todo : NotchStatus.InProgress;
+        Debug.WriteLine($"row click: '{sub.Title}' {sub.Status} -> {target}");
+        await SetStatus(sub.Id, target);
+        var selectedTask = TaskComboBox.SelectedItem as TaskItemDto;
+        if (selectedTask is null)
+        {
+            return;
+        }
+        LoadSubTasksList(selectedTask);
+    }
+
+    private async void SubtaskDone_Click(object sender, RoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.DataContext is not TaskItemDto sub) return;
+
+        var target = sub.Status == NotchStatus.Done ? NotchStatus.Todo : NotchStatus.Done;
+        await SetStatus(sub.Id, target);
+        var selectedTask = TaskComboBox.SelectedItem as TaskItemDto;
         if (selectedTask is null)
         {
             return;
@@ -114,6 +171,7 @@ public partial class MainWidgetWindow : Window
                     _currentEntry = await response.Content.ReadFromJsonAsync<TimeEntryDto>();
                 }
             }
+            await LoadTaskList();
             UpdateStartStopButton();
         }
         catch (HttpRequestException ex)
@@ -133,13 +191,37 @@ public partial class MainWidgetWindow : Window
         StartStopButton.IsEnabled = selected is not null;
     }
     
-    private void SubtaskListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        // TODO
-    }
 
     private void OpenWebApp_Click(object sender, RoutedEventArgs e)
     {
         Process.Start(new ProcessStartInfo("http://localhost:5173") {UseShellExecute = true});
+    }
+
+    private async Task SetStatus(Guid taskId, NotchStatus status)
+    {
+        try
+        {
+            var response =
+                await ApiClient.PatchAsJsonAsync($"api/tasks/{taskId}/status", new UpdateTaskStatusRequest(status));
+            if (!response.IsSuccessStatusCode)
+            {
+                Debug.WriteLine($"Status update not right: {(int)response.StatusCode}");
+                return;
+            }
+
+            await LoadTaskList();
+            await LoadCurrentEntry();
+        }
+        catch (HttpRequestException ex)
+        {
+            Debug.WriteLine(ex.Message);
+        }
+    }
+
+    private async void DoneButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (TaskComboBox.SelectedItem is not TaskItemDto task) return;
+        var target = task.Status == NotchStatus.Done ? NotchStatus.Todo : NotchStatus.Done;
+        await SetStatus(task.Id, target);
     }
 }

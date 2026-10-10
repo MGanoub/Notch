@@ -46,7 +46,7 @@ public class TimerService
                         && stoppedIds.Contains(t.ParentTaskId.Value)
                         && t.Status == NotchStatus.InProgress)
             .ToListAsync();
-        foreach (var s in stoppedSubtasks) s.Status = NotchStatus.Todo;
+        await ResetStoppedTasks(stoppedIds);
 
         await _db.SaveChangesAsync();
 
@@ -70,13 +70,21 @@ public class TimerService
         foreach (var entry in running) entry.EndedAt = now;
 
         var ids = running.Select(e => e.TaskItemId).Distinct().ToList();
-        var tasks = await _db.TaskItems
-            .Where(t => ids.Contains(t.Id) && t.Status == NotchStatus.InProgress)
-            .ToListAsync();
-        foreach (var t in tasks) t.Status = NotchStatus.Todo;
+        await ResetStoppedTasks(ids);
 
         await _db.SaveChangesAsync();
         return running[0];
+    }
+    
+    private async Task ResetStoppedTasks(List<Guid> taskIds)
+    {
+        var toReset = await _db.TaskItems
+            .Where(t => t.Status == NotchStatus.InProgress
+                        && (taskIds.Contains(t.Id)
+                            || (t.ParentTaskId != null && taskIds.Contains(t.ParentTaskId.Value))))
+            .ToListAsync();
+
+        foreach (var t in toReset) t.Status = NotchStatus.Todo;
     }
     
     public async Task<TimeEntry?> StopIfRunningForTaskAsync(string userId, Guid taskItemId)

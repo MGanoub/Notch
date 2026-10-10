@@ -50,8 +50,15 @@ public static class ApiClient
     {
         return await SendAsync(()=>  new HttpRequestMessage(HttpMethod.Post, url){Content = JsonContent.Create(body)});
     }
-    
 
+    public static Task<HttpResponseMessage> PatchAsJsonAsync<T>(string url, T body)
+    {
+        return SendAsync(() => new HttpRequestMessage(HttpMethod.Patch, url)
+        {
+            Content = JsonContent.Create(body)
+        });
+    }
+    
     private static async Task RefreshToken()
     {
         var tokens = TokenStorage.Load();

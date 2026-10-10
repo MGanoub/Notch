@@ -79,6 +79,10 @@ public class TaskController : ControllerBase
         if (request.Status == NotchStatus.Done)
         {
             await _timerService.StopIfRunningForTaskAsync(userId!, task.Id);
+            var subtaskList = await _db.TaskItems
+                .Where(t => t.ParentTaskId == id && t.UserId == userId).ToListAsync();
+            foreach (var subtask in subtaskList) subtask.Status = NotchStatus.Done;
+            
         }
         await _db.SaveChangesAsync();
         return NoContent();

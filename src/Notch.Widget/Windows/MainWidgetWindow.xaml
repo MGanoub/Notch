@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:enums="clr-namespace:Notch.Shared.Enums;assembly=Notch.Shared"
         xmlns:local="clr-namespace:Notch.Widget.Windows"
         mc:Ignorable="d"
         Title="Notch" Height="220" Width="260"
@@ -52,25 +53,79 @@
             </ComboBox.ItemTemplate>
         </ComboBox>
             <Border Background="{StaticResource InsetBrush}" CornerRadius="8"
-                    Padding="12,10" Margin="0,0,0,12">
+                    Padding="12,6" Margin="0,0,0,12">
                 <Grid>
                     <TextBlock Text="Status" FontSize="12" VerticalAlignment="Center"
                                Foreground="{StaticResource MutedTextBrush}"/>
-                    <Border x:Name="StatusPill" CornerRadius="6" Padding="9,3"
-                            HorizontalAlignment="Right"
-                            Background="{StaticResource InsetBrush}">
-                        <TextBlock x:Name="StatusText" Text="—" FontSize="11"/>
-                    </Border>
+
+                    <StackPanel Orientation="Horizontal"
+                                HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <Border x:Name="StatusPill" CornerRadius="6" Padding="9,3"
+                                VerticalAlignment="Center"
+                                Background="{StaticResource InsetBrush}">
+                            <TextBlock x:Name="StatusText" Text="—" FontSize="11"
+                                       VerticalAlignment="Center"/>
+                        </Border>
+                        <Button x:Name="DoneButton" Margin="6,0,0,0"
+                                Style="{StaticResource IconButton}"
+                                Content="&#xE73E;" ToolTip="Mark done"
+                                IsEnabled="False"
+                                Click="DoneButton_Click"/>
+                    </StackPanel>
                 </Grid>
             </Border>
         <Button x:Name="StartStopButton" Content="Start" Click="StartStopButton_Click" 
                 Style="{StaticResource ActionButton}" 
                 Background="{StaticResource SuccessBrush}"/>
         
-        <TextBlock x:Name="SubTasksLabel" Text="Subtasks" FontWeight="Bold" Margin="0,10,0,6" Foreground="{StaticResource MutedTextBrush}"/>
-        <ListBox x:Name="SubtaskListBox"
-                 DisplayMemberPath="Title"
-                 SelectionChanged="SubtaskListBox_SelectionChanged"/>
+        <StackPanel x:Name="SubtasksPanel" Visibility="Collapsed">
+    <TextBlock Text="Subtasks" FontSize="11" FontWeight="Bold"
+               Margin="0,10,0,6" Foreground="{StaticResource MutedTextBrush}"/>
+
+            <ItemsControl x:Name="SubtaskItems">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border x:Name="Row" Background="{StaticResource InsetBrush}"
+                                CornerRadius="6" Padding="8,4" Margin="0,0,0,6" Cursor="Hand"
+                                MouseLeftButtonUp="SubtaskRow_Click">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="18"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock x:Name="Marker" Grid.Column="0" Text="○" FontSize="11"
+                                           VerticalAlignment="Center"
+                                           Foreground="{StaticResource MutedTextBrush}"/>
+                                <TextBlock x:Name="RowTitle" Grid.Column="1" Text="{Binding Title}"
+                                           FontSize="12" VerticalAlignment="Center"
+                                           TextTrimming="CharacterEllipsis"/>
+                                <Button Grid.Column="2" Style="{StaticResource IconButton}"
+                                        Content="&#xE73E;" ToolTip="Mark done"
+                                        Click="SubtaskDone_Click"/>
+                            </Grid>
+                        </Border>
+
+                        <DataTemplate.Triggers>
+                            <DataTrigger Binding="{Binding Status}"
+                                         Value="{x:Static enums:NotchStatus.InProgress}">
+                                <Setter TargetName="Row" Property="Background" Value="{StaticResource AccentBgBrush}"/>
+                                <Setter TargetName="Marker" Property="Text" Value="●"/>
+                                <Setter TargetName="Marker" Property="Foreground" Value="{StaticResource AccentBrush}"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Status}"
+                                         Value="{x:Static enums:NotchStatus.Done}">
+                                <Setter TargetName="Marker" Property="Text" Value="✓"/>
+                                <Setter TargetName="Marker" Property="Foreground" Value="{StaticResource DoneBrush}"/>
+                                <Setter TargetName="RowTitle" Property="Foreground" Value="{StaticResource MutedTextBrush}"/>
+                                <Setter TargetName="RowTitle" Property="TextDecorations" Value="Strikethrough"/>
+                            </DataTrigger>
+                        </DataTemplate.Triggers>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
         <!-- Footer: divider line + link with icon -->
         <Border BorderBrush="{StaticResource LineBrush}"
                 BorderThickness="0,1,0,0"
